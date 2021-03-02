@@ -1,0 +1,7 @@
+objdump -d (disassembly executable section)
+objdump -h (section headers)
+size {file} (size of sections column 1 is .text)
+objdump -dj .text {file} (disassembly of text) 
+
+functions : <_start>:\n
+instructions: " " && line > 1
