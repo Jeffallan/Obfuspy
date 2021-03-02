@@ -15,14 +15,15 @@ def main() -> None:
     args = prs.parse_args()
     #TODO add flag for custom function and jump matching REGEX.
     size = helpers.get_size(args.file)
-    dump = helpers.dump_binary(args.file)
+    disassemble = helpers.disassemble_binary(args.file)
+    hexdump = helpers.make_raw_hex(args.file)
     #report size
     print(f"Size of .TEXT {size}\n")
     #TODO report Shannon's entropy
-    #print(f"Entropy: {helpers.calculate_entropy(dump)}")
+    print(f"Entropy: {helpers.calculate_entropy(hexdump)}\n")
     FUNCTIONS = []
-    helpers._check_newline(dump)
-    with open(dump) as inf:
+    helpers._check_newline(disassemble)
+    with open(disassemble) as inf:
         header = False
         n = ""
         instructions = 0
