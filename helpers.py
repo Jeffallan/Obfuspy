@@ -4,8 +4,8 @@ from typing import IO
 import os
 import subprocess
 from typing import Pattern
-import pandas as pd #TODO add to requirements.txt
-from scipy.stats import entropy #TODO add to requirements.txt
+import pandas as pd 
+from scipy.stats import entropy 
 
 
 
@@ -58,28 +58,56 @@ def get_size(inf: IO) -> str:
     :param inf: The binary file to be analyzed
     :param outdir: The output directory of the processed file defaults to ./processed_files
     :rtype: str
-    :returns: The size of the .TEXT section as a decimal number and creates a new file in 
-              outdir called {outdir}/{inf}.dump
+    :returns: The size of the .TEXT section as a decimal number.
     """
     return subprocess.getoutput("size " + inf + " | awk \'{print $1}\' | tail -1") 
 
-def dump_binary(inf: IO, outdir: str="./processed_files") -> str:
+def disassemble_binary(inf: IO, outdir: str="./processed_files") -> str:
     """ 
-    Creates a dump of the .TEST section binary file (inf).
+    Creates a disassembled .TEXT section binary file (inf) in  outdir called {outdir}/{inf}.dis.
     :param inf: The binary file to dumped in the format of objdump -dj .text {inf}
-    :param outf: the destination of the dump file. Defaults to ./test_files/tmp.txt
+    :param outf: the destination of the dump file. Defaults to ./processed_files/{inf}.dis
     :rtype: str
-    :returns: The name of the dump file
+    :returns: The name of the dump file.
     """
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    dest=f"{outdir}/{os.path.basename(inf)}.dump"
+    dest = f"{outdir}/{os.path.basename(inf)}.dis"
     subprocess.getoutput(f"objdump -dj .text {inf} > {dest}")
     return dest
 
-def calculate_entropy(inf: IO):
-    dump = subprocess.getoutput(f"xxd -ps {inf}").replace("\n", "")
-    #byteme = [dump[i:i+2] for i in range(0, len(dump), 2)]
-    byteme = [int(dump[i:i+2], 16) for i in range(0, len(dump), 2)]
-    return entropy(byteme, base=256) #base=255 or 16?
-    #return byteme
+def make_raw_hex(inf: IO, outdir: str="./processed_files") -> str:
+    """ 
+    Creates a raw aw binary dump (outdir/{inf}.dump) and a hexidecimal representation (outdir/{inf}.hex) 
+    of the .TEXT section of the binary file (inf) in  outdir. 
+    :param inf: The binary file to dumped in the format of objdump -dj .text {inf}
+    :param outf: the destination of the dump file. Defaults to ./processed_files/{inf}{.dump | .hex}
+    :rtype: str
+    :returns: The name of the hex file.
+    """
+    # get raw hex from .text
+    # https://unix.stackexchange.com/a/421558
+    # objcopy -O binary -j .text a.out a.dump ; od -An -t x1 a.dump > a.hex
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    dest = f"{outdir}/{os.path.basename(inf)}"
+    f = f"{dest}.hex"
+    subprocess.getoutput(f"objcopy -O binary -j .text {inf} {dest}.dump ; \
+                          od -An -t x1 {dest}.dump > {dest}.hex")
+    return f
+
+def calculate_entropy(inf: IO) -> float:
+    """ 
+    Calculates the entropy of the parameter inf (approximates Shannon's entropy).
+    :param inf: A file with the raw hexidecimal values to be analyzed.
+    :rtype: float
+    :returns: The calculated entropy of the file.
+    """
+    # Shannon entropy a.hex: 3.319071417214196 https://gchq.github.io/CyberChef
+    # https://www.kite.com/python/answers/how-to-calculate-shannon-entropy-in-python
+    dump = open(inf, "r").read().replace("\n", "").replace(" ", "")
+    print(f"Raw Hex:\n\n{dump}\n")
+    #byteme = [int(dump[i:i+2], 16) for i in range(0, len(dump), 2)]
+    byteme = [dump[i:i+2] for i in range(0, len(dump), 2)]
+    series = pd.Series(byteme)
+    return entropy(series.value_counts()) # base=255 or 16?
