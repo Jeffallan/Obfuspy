@@ -105,9 +105,11 @@ def calculate_entropy(inf: IO) -> float:
     """
     # Shannon entropy a.hex: 3.319071417214196 https://gchq.github.io/CyberChef
     # https://www.kite.com/python/answers/how-to-calculate-shannon-entropy-in-python
+    # https://onestopdataanalysis.com/shannon-entropy/
     dump = open(inf, "r").read().replace("\n", "").replace(" ", "")
     print(f"Raw Hex:\n\n{dump}\n")
     #byteme = [int(dump[i:i+2], 16) for i in range(0, len(dump), 2)]
     byteme = [dump[i:i+2] for i in range(0, len(dump), 2)]
     series = pd.Series(byteme)
-    return entropy(series.value_counts()) # base=255 or 16?
+    return entropy(series.value_counts())
+    # return entropy([x/sum(series.value_counts()) for x in series.value_counts()])
