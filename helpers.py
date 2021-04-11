@@ -1,5 +1,5 @@
+import collections
 import re
-from types import BuiltinMethodType
 from typing import IO
 import os
 import subprocess
@@ -9,12 +9,55 @@ from scipy.stats import entropy
 
 
 
+
+###################
+# Begin Blacklist #
+###################
+
+BLACKLIST = [
+    re.compile("<_.*"),
+    re.compile("deregister_tm_clones"),
+    re.compile("register_tm_clones"),
+    re.compile("frame_dummy")
+
+]
+
+#################
+# End Blacklist #
+#################
+
+#########################
+# Begin Data Structures #
+#########################
+
+FUNCTION_COLLECTION = collections.namedtuple("Function", 
+                                             "name \
+                                             instruction_count \
+                                             jump_count \
+                                             blocks" 
+                                            )
+
+PROGRAM_COLLECTION = collections.namedtuple("Program", 
+                                            "name \
+                                             blocks_setting \
+                                             average_blocks \
+                                             entropy \
+                                             raw_hex")
+INSTRUCTION_COLLECTION = collections.namedtuple("Instruction",
+                                                "name \
+                                                location \
+                                                opcode \
+                                                op_byte \
+                                                op")
+#######################
+# End Data Structures #
+#######################                                             
+
 #########################
 # Begin private methods #
 #    accessed by the    # 
 #    __main__ method    #
 #########################
-
 def _is_func(line: str, match: Pattern=r"<.*>:") -> bool:
     """ 
     Checks if the parameter line is a function header. Default value is r"<.*>:"
@@ -24,7 +67,8 @@ def _is_func(line: str, match: Pattern=r"<.*>:") -> bool:
     :returns: If line matches function header
     """
     #match = r"<.*>:"
-    return re.search(match, line)
+    if not any(re.search(b, line) for b in BLACKLIST):
+        return re.search(match, line)
 
 def _is_jump(line: str, match: Pattern=r"\tj[a-z]{1,4} ") -> bool:
     """ 

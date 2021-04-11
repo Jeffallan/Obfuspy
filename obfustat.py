@@ -1,25 +1,25 @@
-import re
-import collections
 import argparse
 from typing import IO
-import os
-import subprocess
 import helpers
 
 
 def main() -> None:
-    # a collection object to hold data about the identified functions
-    FUNC = collections.namedtuple("Function", "name instruction_count jump_count")
+    # Data Collections
+    FUNC = helpers.FUNCTION_COLLECTION
+    PROG = helpers.PROGRAM_COLLECTION
+    CMD = helpers.INSTRUCTION_COLLECTION
+    # CLI Arguments
     prs = argparse.ArgumentParser()
     prs.add_argument("file", help="parses the output of objdump -dj .text {file}")
     args = prs.parse_args()
+    # End CLI Arguments
+
     #TODO add flag for custom function and jump matching REGEX.
     size = helpers.get_size(args.file)
     disassemble = helpers.disassemble_binary(args.file)
     hexdump = helpers.make_raw_hex(args.file)
     #report size
     print(f"Size of .TEXT {size}\n")
-    #TODO report Shannon's entropy
     print(f"Entropy: {helpers.calculate_entropy(hexdump)}\n")
     FUNCTIONS = []
     helpers._check_newline(disassemble)
@@ -31,9 +31,9 @@ def main() -> None:
         for i in inf:
             function = helpers._is_func(i)
             if function:
-                header = True
-                instructions = 0
-                n = (function.group(0).translate(str.maketrans({"<": "", ">": "", ":": ""})))
+                    header = True
+                    instructions = 0
+                    n = (function.group(0).translate(str.maketrans({"<": "", ">": "", ":": ""})))
             elif header:
                 if i[0] == " ": 
                     instructions+=1
@@ -42,7 +42,8 @@ def main() -> None:
                 elif len(i) <= 1: 
                     f = FUNC(name=n, 
                              instruction_count=instructions, 
-                             jump_count=jump_instructions)
+                             jump_count=jump_instructions,
+                             blocks=0)
 
                     FUNCTIONS.append(f)
                     header = False
