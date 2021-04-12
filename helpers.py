@@ -30,25 +30,35 @@ BLACKLIST = [
 # Begin Data Structures #
 #########################
 
-FUNCTION_COLLECTION = collections.namedtuple("Function", 
-                                             "name \
+PROGRAM_COLLECTION = collections.namedtuple("Program", 
+                                            "name \
+                                             block_setting \
+                                             average_blocks \
+                                             entropy \
+                                             raw_hex \
+                                             size")
+
+FUNCTION_COLLECTION = collections.namedtuple("Function",
+                                             "program \
+                                             name \
                                              instruction_count \
                                              jump_count \
                                              blocks" 
                                             )
 
-PROGRAM_COLLECTION = collections.namedtuple("Program", 
-                                            "name \
-                                             blocks_setting \
-                                             average_blocks \
-                                             entropy \
-                                             raw_hex")
+BLOCK_COLLECTION = collections.namedtuple("Block",
+                                          "name \
+                                          function \
+                                          instruction_count"
+                                          )
+
 INSTRUCTION_COLLECTION = collections.namedtuple("Instruction",
-                                                "name \
-                                                location \
-                                                opcode \
-                                                op_byte \
-                                                op")
+                                                "block \
+                                                name \
+                                                offset \
+                                                bytes \
+                                                op"
+                                                )                                           
 #######################
 # End Data Structures #
 #######################                                             
@@ -151,7 +161,7 @@ def calculate_entropy(inf: IO) -> float:
     # https://www.kite.com/python/answers/how-to-calculate-shannon-entropy-in-python
     # https://onestopdataanalysis.com/shannon-entropy/
     dump = open(inf, "r").read().replace("\n", "").replace(" ", "")
-    print(f"Raw Hex:\n\n{dump}\n")
+    #print(f"Raw Hex:\n\n{dump}\n")
     #byteme = [int(dump[i:i+2], 16) for i in range(0, len(dump), 2)]
     byteme = [dump[i:i+2] for i in range(0, len(dump), 2)]
     series = pd.Series(byteme)
