@@ -2,9 +2,12 @@ import argparse
 from typing import IO
 import helpers
 from pathlib import Path
+from db import Base, create_db
+from sqlalchemy import create_engine
 
 
 def main() -> None:
+    create_db("test")
     # Data Collections
     FUNC = helpers.FUNCTION_COLLECTION
     PROG = helpers.PROGRAM_COLLECTION
