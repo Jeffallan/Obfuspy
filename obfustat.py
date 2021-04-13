@@ -1,13 +1,12 @@
 import argparse
+from os import name
 from typing import IO
 import helpers
 from pathlib import Path
-from db import Base, create_db
-from sqlalchemy import create_engine
-
+from db import Base, create_db, Program, Function, Block, Instruction
+from sqlalchemy.orm import sessionmaker
 
 def main() -> None:
-    create_db("test")
     # Data Collections
     FUNC = helpers.FUNCTION_COLLECTION
     PROG = helpers.PROGRAM_COLLECTION
@@ -19,6 +18,10 @@ def main() -> None:
     prs.add_argument("file", help="parses the output of objdump -dj .text {file}")
     args = prs.parse_args()
     # End CLI Arguments
+
+    engine = create_db("test")
+    SESSION = sessionmaker(bind=engine)
+    session = SESSION()
 
     size = helpers.get_size(args.file)
     disassemble = helpers.disassemble_binary(args.file)
@@ -74,7 +77,7 @@ def main() -> None:
                     split = i.split("\t")
                     if len(split) > 2:
                         el = split[2].split()
-                        print(el)
+                        #print(el)
                         if len(el) > 1:
                             op = " ".join(el).replace("\n", "")
                         else:
@@ -125,6 +128,44 @@ def main() -> None:
                 print(f"\n\t\tName: {i.name}\n\t\tBlock: {i.block}\n\t\tOffset: {i.offset}\n\t\tBytes: {i.bytes}\n\t\tOperation: {i.op}")
         for b in BLOCKS:
             print(f"Block:\n\t\tName: {b.name}\n\t\tMember: {b.function}\n\t\tInstructions: {b.instruction_count}")
+
+        #print(prog.name)
+        program = (Program(name=prog.name, 
+                           block_setting=prog.block_setting,
+                           average_blocks=prog.average_blocks,
+                           entropy=prog.entropy,
+                           raw_hex=prog.raw_hex,
+                           size=prog.size))
+        session.add(program)
+        session.commit()
+
+        for f in FUNCTIONS:
+            f = (Function(name=f.name,
+                program_id=program.id,
+                instruction_count=f.instruction_count,
+                jump_count=f.jump_count,
+                blocks=f.blocks))
+            session.add(f)
+            session.commit()
+            for b in BLOCKS:
+                if b.function == f.name:
+                    b = (Block(name=b.name,
+                            function_id=f.id,
+                            instruction_count=b.instruction_count))
+                    session.add(b)
+                    session.commit()
+
+                for i in INSTRUCTIONS:
+                    if i.block == b.name:
+                        i = (Instruction(name=i.name,
+                                         block_id=b.id,
+                                         offset=i.offset,
+                                         byte_str=i.bytes,
+                                         op=i.op))
+                        session.add(i)
+                        session.commit()
+
+
 
 if __name__ == "__main__":
     main()

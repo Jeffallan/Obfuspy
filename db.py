@@ -20,7 +20,8 @@ class Program(Base):
 class Function(Base):
     __tablename__ = "function"
     id = Column(Integer, primary_key=True)
-    program = relationship(Program)
+    program_id = Column(Integer, ForeignKey("program.id"))
+    program = relationship(Program, backref='program')
     name = Column(String)
     instruction_count = Column(Integer)
     jump_count = Column(Integer)
@@ -29,14 +30,16 @@ class Function(Base):
 class Block(Base):
     __tablename__ = "block"
     id = Column(Integer, primary_key=True)
-    function = relationship(Function)
+    function_id = Column(Integer, ForeignKey("function.id"))
+    function = relationship(Function, backref='function')
     name = Column(String)
     instruction_count = Column(Integer)
 
 class Instruction(Base):
     __tablename__ = "instruction"
     id = Column(Integer, primary_key=True)
-    block = relationship(Block)
+    block_id = Column(Integer, ForeignKey("block.id"))
+    block = relationship(Block, backref='block')
     name = Column(String)
     offset = Column(String)
     byte_str = Column(String)
@@ -47,3 +50,4 @@ def create_db(name: str):
     if not database_exists(engine.url):
         create_database(engine.url)
         Base.metadata.create_all(engine)
+    return engine
