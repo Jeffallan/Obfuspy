@@ -154,18 +154,15 @@ def main() -> None:
                             instruction_count=b.instruction_count))
                     session.add(b)
                     session.commit()
-
-                for i in INSTRUCTIONS:
-                    if i.block == b.name:
-                        i = (Instruction(name=i.name,
-                                         block_id=b.id,
-                                         offset=i.offset,
-                                         byte_str=i.bytes,
-                                         op=i.op))
-                        session.add(i)
-                        session.commit()
-
-
+                    for i in INSTRUCTIONS:
+                        if i.block == b.name:
+                            i = (Instruction(name=i.name,
+                                             block_id=b.id,
+                                             offset=i.offset,
+                                             byte_str=i.bytes,
+                                             op=i.op))
+                            session.add(i)
+                            session.commit()
 
 if __name__ == "__main__":
     main()
