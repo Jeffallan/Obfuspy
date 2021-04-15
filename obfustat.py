@@ -144,7 +144,9 @@ def main() -> None:
                 program_id=program.id,
                 instruction_count=f.instruction_count,
                 jump_count=f.jump_count,
-                blocks=f.blocks))
+                blocks=f.blocks,
+                average_block_size=f.instruction_count / f.blocks))
+
             session.add(f)
             session.commit()
             for b in BLOCKS:

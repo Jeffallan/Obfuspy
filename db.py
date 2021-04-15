@@ -26,6 +26,7 @@ class Function(Base):
     instruction_count = Column(Integer)
     jump_count = Column(Integer)
     blocks = Column(Integer)
+    average_block_size = Column(Float)
 
 class Block(Base):
     __tablename__ = "block"
