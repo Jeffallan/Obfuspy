@@ -127,7 +127,7 @@ def disassemble_binary(inf: IO, outdir: str="./processed_files") -> str:
     if not os.path.exists(outdir):
         os.mkdir(outdir)
     dest = f"{outdir}/{os.path.basename(inf)}.dis"
-    subprocess.getoutput(f"objdump -dj .text {inf} > {dest}")
+    subprocess.getoutput(f"objdump -dwj .text {inf} > {dest}")
     return dest
 
 def make_raw_hex(inf: IO, outdir: str="./processed_files") -> str:

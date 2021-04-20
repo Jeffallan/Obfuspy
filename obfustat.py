@@ -15,7 +15,7 @@ def main() -> None:
 
     # CLI Arguments
     prs = argparse.ArgumentParser()
-    prs.add_argument("file", help="parses the output of objdump -dj .text {file}")
+    prs.add_argument("file", help="parses the output of objdump -dwj .text {file}")
     args = prs.parse_args()
     # End CLI Arguments
 
