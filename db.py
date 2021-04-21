@@ -11,8 +11,9 @@ class Program(Base):
     __tablename__ = "program"
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    block_setting = Column(Integer)
-    average_blocks = Column(Integer)
+    llvm_blocks = Column(Integer) # xxx # block_setting
+    llvm_instructions = Column(Integer) # yyy
+    average_instructions = Column(Float) # z.zz #average blocks
     entropy = Column(Float)
     raw_hex = Column(String)
     size = Column(Float)

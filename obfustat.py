@@ -5,6 +5,7 @@ import helpers
 from pathlib import Path
 from db import Base, create_db, Program, Function, Block, Instruction
 from sqlalchemy.orm import sessionmaker
+from pathlib import Path
 
 def main() -> None:
     # Data Collections
@@ -15,11 +16,14 @@ def main() -> None:
 
     # CLI Arguments
     prs = argparse.ArgumentParser()
-    prs.add_argument("file", help="parses the output of objdump -dwj .text {file}")
+    prs.add_argument("file", help="Parses the output of objdump -dwj .text {file}")
+    prs.add_argument("--llvm_blocks", help="The number of LLVM blocks", default=0)
+    prs.add_argument("--llvm_instructions", help="The number of LLVM instructions", default=0)
+    prs.add_argument("--average_instructions", help="The average number of LLVM instructions per block", default=0)
     args = prs.parse_args()
     # End CLI Arguments
 
-    engine = create_db("test")
+    engine = create_db(f"{args.file.split('/')[-1]}")
     SESSION = sessionmaker(bind=engine)
     session = SESSION()
 
@@ -28,8 +32,9 @@ def main() -> None:
     hexdump = helpers.make_raw_hex(args.file)
 
     prog = PROG(name=Path(args.file).name,
-                block_setting=0, # TODO get this info from parsing Bill's file names
-                average_blocks=0, # TODO get this info from parsing Bill's file names
+                llvm_blocks=args.llvm_blocks, # TODO get this info from parsing Bill's file names
+                llvm_instructions=args.llvm_instructions, # TODO get this info from parsing Bill's file names
+                average_instructions=args.average_instructions,
                 entropy=helpers.calculate_entropy(hexdump),
                 raw_hex=hexdump,
                 size=size)
@@ -45,7 +50,7 @@ def main() -> None:
         func_name = ""
         func_instructions = 0
         jump_instructions = 0
-        block_count = 1
+        block_count = 0
         block_instructions = 0
         block_name = ""
         for i in inf:
@@ -103,7 +108,8 @@ def main() -> None:
                     block = BLOCK(name=block_name,
                                       function=func_name,
                                       instruction_count=block_instructions)
-                    BLOCKS.append(block)
+                    if block.instruction_count > 0:                  
+                        BLOCKS.append(block)
                     
                     f = FUNC(name=func_name,
                              program=prog.name, 
@@ -131,8 +137,9 @@ def main() -> None:
 
         #print(prog.name)
         program = (Program(name=prog.name, 
-                           block_setting=prog.block_setting,
-                           average_blocks=prog.average_blocks,
+                           llvm_blocks=prog.llvm_blocks,
+                           llvm_instructions=prog.llvm_instructions,
+                           average_instructions=prog.average_instructions,
                            entropy=prog.entropy,
                            raw_hex=prog.raw_hex,
                            size=prog.size))

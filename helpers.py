@@ -32,8 +32,9 @@ BLACKLIST = [
 
 PROGRAM_COLLECTION = collections.namedtuple("Program", 
                                             "name \
-                                             block_setting \
-                                             average_blocks \
+                                             llvm_blocks \
+                                             llvm_instructions \
+                                             average_instructions \
                                              entropy \
                                              raw_hex \
                                              size")
