@@ -141,3 +141,5 @@ cython_debug/
 
 .vscode
 processed_files/*
+*.db
+input/*

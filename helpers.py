@@ -1,5 +1,5 @@
+import collections
 import re
-from types import BuiltinMethodType
 from typing import IO
 import os
 import subprocess
@@ -9,12 +9,66 @@ from scipy.stats import entropy
 
 
 
+
+###################
+# Begin Blacklist #
+###################
+
+BLACKLIST = [
+    re.compile("<_.*"),
+    re.compile("deregister_tm_clones"),
+    re.compile("register_tm_clones"),
+    re.compile("frame_dummy")
+
+]
+
+#################
+# End Blacklist #
+#################
+
+#########################
+# Begin Data Structures #
+#########################
+
+PROGRAM_COLLECTION = collections.namedtuple("Program", 
+                                            "name \
+                                             llvm_blocks \
+                                             llvm_instructions \
+                                             average_instructions \
+                                             entropy \
+                                             raw_hex \
+                                             size")
+
+FUNCTION_COLLECTION = collections.namedtuple("Function",
+                                             "program \
+                                             name \
+                                             instruction_count \
+                                             jump_count \
+                                             blocks" 
+                                            )
+
+BLOCK_COLLECTION = collections.namedtuple("Block",
+                                          "name \
+                                          function \
+                                          instruction_count"
+                                          )
+
+INSTRUCTION_COLLECTION = collections.namedtuple("Instruction",
+                                                "block \
+                                                name \
+                                                offset \
+                                                bytes \
+                                                op"
+                                                )                                           
+#######################
+# End Data Structures #
+#######################                                             
+
 #########################
 # Begin private methods #
 #    accessed by the    # 
 #    __main__ method    #
 #########################
-
 def _is_func(line: str, match: Pattern=r"<.*>:") -> bool:
     """ 
     Checks if the parameter line is a function header. Default value is r"<.*>:"
@@ -24,7 +78,8 @@ def _is_func(line: str, match: Pattern=r"<.*>:") -> bool:
     :returns: If line matches function header
     """
     #match = r"<.*>:"
-    return re.search(match, line)
+    if not any(re.search(b, line) for b in BLACKLIST):
+        return re.search(match, line)
 
 def _is_jump(line: str, match: Pattern=r"\tj[a-z]{1,4} ") -> bool:
     """ 
@@ -73,7 +128,7 @@ def disassemble_binary(inf: IO, outdir: str="./processed_files") -> str:
     if not os.path.exists(outdir):
         os.mkdir(outdir)
     dest = f"{outdir}/{os.path.basename(inf)}.dis"
-    subprocess.getoutput(f"objdump -dj .text {inf} > {dest}")
+    subprocess.getoutput(f"objdump -dwj .text {inf} > {dest}")
     return dest
 
 def make_raw_hex(inf: IO, outdir: str="./processed_files") -> str:
@@ -105,9 +160,11 @@ def calculate_entropy(inf: IO) -> float:
     """
     # Shannon entropy a.hex: 3.319071417214196 https://gchq.github.io/CyberChef
     # https://www.kite.com/python/answers/how-to-calculate-shannon-entropy-in-python
+    # https://onestopdataanalysis.com/shannon-entropy/
     dump = open(inf, "r").read().replace("\n", "").replace(" ", "")
-    print(f"Raw Hex:\n\n{dump}\n")
+    #print(f"Raw Hex:\n\n{dump}\n")
     #byteme = [int(dump[i:i+2], 16) for i in range(0, len(dump), 2)]
     byteme = [dump[i:i+2] for i in range(0, len(dump), 2)]
     series = pd.Series(byteme)
-    return entropy(series.value_counts()) # base=255 or 16?
+    return entropy(series.value_counts())
+    # return entropy([x/sum(series.value_counts()) for x in series.value_counts()])
