@@ -26,6 +26,10 @@ def main() -> None:
                      help="The number of LLVM instructions", default=0)
     prs.add_argument("--average_instructions",
                      help="The average number of LLVM instructions per block", default=0)
+    prs.add_argument("--out", help="output_dir", default="./results")
+    prs.add_argument("--no-blacklist", help="Do not blacklist functions", 
+                     dest="blacklist", action="store_false")
+    prs.set_defaults(blacklist=True)
     args = prs.parse_args()
     # End CLI Arguments
     """
@@ -34,14 +38,14 @@ def main() -> None:
     session = SESSION()
     """
     size = helpers.get_size(args.file)
-    disassemble = helpers.disassemble_binary(args.file)
-    hexdump = helpers.make_raw_hex(args.file)
+    disassemble = helpers.disassemble_binary(args.file, outdir=args.out)
+    hexdump = helpers.make_raw_hex(args.file, outdir=args.out) 
     
     prog = PROG(name=Path(args.file).name,
                 llvm_blocks=args.llvm_blocks,
                 llvm_instructions=args.llvm_instructions,
                 average_instructions=args.average_instructions,
-                entropy=helpers.calculate_entropy(hexdump),
+                entropy= 0, #helpers.calculate_entropy(hexdump), # unnecessary for now
                 raw_hex=hexdump,
                 size=size)
     """
@@ -70,7 +74,7 @@ def main() -> None:
         block_instructions = 0
         block_name = ""
         for i in inf:
-            function = helpers._is_func(i)
+            function = helpers._is_func(i, use_black_list=args.blacklist)
             if function:
                 header = True
                 func_instructions = 0
@@ -213,25 +217,26 @@ def main() -> None:
         print("\n")
         #print(f"\nFunctions:\n")
 
-        p = Path("./results")
+        p = Path(args.out)
         if p.exists() == False:
             p.mkdir(parents=True, exist_ok=True)
         #make csv
         if Path(p / "results.csv").exists() == False:
-            with open(f"./results/results.csv", "a") as csv:
+            with open(f"{ p }/results.csv", "a") as csv:
                 writer = DictWriter(csv, fieldnames=list(out_dict.keys()))
                 writer.writeheader()
                 writer.writerow(out_dict)
-        with open(f"./results/results.csv", "a") as csv:
+        with open(f"{ p }/results.csv", "a") as csv:
             writer = DictWriter(csv, fieldnames=list(out_dict.keys()))
             #writer.writeheader()
             writer.writerow(out_dict)
         # make logfile
-        with open(f"./results/results.log", "a") as lf:
+        with open(f"{ p }/results.log", "a") as lf:
             lf.write(f"Program: {prog.name}\n")
             for f in FUNCTIONS:
                 lf.write(
                     f"\tName: {f.name}\n\t\tInstructions: {f.instruction_count}\n\t\tJumps: {f.jump_count}\n\t\tBlocks: {f.blocks}")
                 lf.write("\n\n")
+
 if __name__ == "__main__":
     main()

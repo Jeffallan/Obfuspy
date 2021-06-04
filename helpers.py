@@ -69,7 +69,7 @@ INSTRUCTION_COLLECTION = collections.namedtuple("Instruction",
 #    accessed by the    # 
 #    __main__ method    #
 #########################
-def _is_func(line: str, match: Pattern=r"<.*>:") -> bool:
+def _is_func(line: str, match: Pattern=r"<.*>:", use_black_list: bool=True) -> bool:
     """ 
     Checks if the parameter line is a function header. Default value is r"<.*>:"
     If this is a function header this switches the header flag to True in the main method.
@@ -78,7 +78,10 @@ def _is_func(line: str, match: Pattern=r"<.*>:") -> bool:
     :returns: If line matches function header
     """
     #match = r"<.*>:"
-    if not any(re.search(b, line) for b in BLACKLIST):
+    if use_black_list:
+        if not any(re.search(b, line) for b in BLACKLIST):
+            return re.search(match, line)
+    else:
         return re.search(match, line)
 
 def _is_jump(line: str, match: Pattern=r"\tj[a-z]{1,4} ") -> bool:
@@ -111,7 +114,6 @@ def get_size(inf: IO) -> str:
     """ 
     returns the size of the .TEXT section of a binary file.
     :param inf: The binary file to be analyzed
-    :param outdir: The output directory of the processed file defaults to ./processed_files
     :rtype: str
     :returns: The size of the .TEXT section as a decimal number.
     """
@@ -145,11 +147,11 @@ def make_raw_hex(inf: IO, outdir: str="./processed_files") -> str:
     # objcopy -O binary -j .text a.out a.dump ; od -An -t x1 a.dump > a.hex
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    dest = f"{outdir}/{os.path.basename(inf)}"
-    f = f"{dest}.hex"
+    dest = f"{outdir}/{os.path.basename(inf)}.hex"
+    #f = f"{dest}.hex"
     subprocess.getoutput(f"objcopy -O binary -j .text {inf} {dest}.dump ; \
-                          od -An -t x1 {dest}.dump > {dest}.hex")
-    return f
+                          od -An -t x1 {dest}.dump > {dest}")
+    return f"{dest}"
 
 def calculate_entropy(inf: IO) -> float:
     """ 

@@ -143,3 +143,5 @@ cython_debug/
 processed_files/*
 *.db
 input/*
+obfustat_data/*
+results/*
