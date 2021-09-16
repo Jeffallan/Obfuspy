@@ -1,3 +1,8 @@
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8475.svg)](https://doi.org/10.5281/zenodo.8475)
+
+
 ## About
 Obfuspy is a Python module for analyzing binary files especially to measure the effects of obfuscation. The initial goal of this work is to provide a CLI that process the .TEXT section of a binary and analyzes the size of the .TEXT section, the size of functions, counts the number of jump instructions, and calculates the entropy of the .TEXT section for additional processing.
 
